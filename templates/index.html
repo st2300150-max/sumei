@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eaf5ff">
+  <title>出國行前天氣與穿衣助手</title>
+  <style>
+    :root { color-scheme: light; --ink:#18324b; --muted:#64798d; --blue:#2778c4; --pale:#eaf5ff; --line:#dce9f4; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:linear-gradient(180deg,#eaf5ff 0,#f5f9fc 360px,#f5f9fc 100%); color:var(--ink); font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+    .wrap { width:min(1050px,calc(100% - 32px)); margin:0 auto; }
+    header { padding:34px 0 22px; }
+    .eyebrow { color:var(--blue); font-weight:700; font-size:.83rem; letter-spacing:.08em; }
+    h1 { font-size:clamp(1.65rem,4vw,2.35rem); margin:8px 0; letter-spacing:.01em; }
+    .intro { margin:0; color:var(--muted); }
+    main { padding-bottom:36px; }
+    .panel,.card { background:#fff; border:1px solid var(--line); border-radius:20px; box-shadow:0 8px 28px #2f5d8010; }
+    .panel { padding:22px; margin-bottom:18px; }
+    h2 { margin:0 0 14px; font-size:1.15rem; }
+    .city-buttons { display:flex; flex-wrap:wrap; gap:9px; }
+    .city-buttons a { border:1px solid var(--line); color:var(--ink); text-decoration:none; border-radius:999px; padding:9px 14px; background:#fff; transition:.15s; }
+    .city-buttons a:hover,.city-buttons a.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+    form.search { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    input,select,button { font:inherit; }
+    input,select { flex:1 1 240px; min-width:0; border:1px solid #cbdbe8; border-radius:12px; padding:12px 14px; color:var(--ink); background:white; }
+    button { border:0; border-radius:12px; background:var(--blue); color:white; padding:12px 20px; font-weight:700; cursor:pointer; }
+    button:hover { background:#1c65a8; }
+    .hint { margin:10px 0 0; color:var(--muted); font-size:.88rem; }
+    .error { border:1px solid #f2c2bb; background:#fff5f3; color:#a33c2e; border-radius:14px; padding:14px 16px; margin:0 0 18px; }
+    .results-select { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .results-select label { font-weight:600; }
+    .section-title { display:flex; justify-content:space-between; align-items:end; gap:12px; margin:28px 0 13px; }
+    .section-title h2 { margin:0; font-size:1.3rem; }
+    .section-title span { color:var(--muted); font-size:.9rem; }
+    .current { padding:24px; }
+    .place-line { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+    .place-line h2 { font-size:1.6rem; margin:0 0 4px; }
+    .place-line p { margin:0; color:var(--muted); }
+    .local-time { text-align:right; color:var(--muted); font-size:.9rem; }
+    .local-time strong { display:block; color:var(--ink); font-size:1rem; margin-bottom:4px; }
+    .metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:22px; }
+    .metric { background:#f2f8fd; border-radius:15px; padding:16px; }
+    .metric span { display:block; color:var(--muted); font-size:.85rem; }
+    .metric strong { display:block; font-size:1.45rem; margin-top:5px; }
+    .tips { display:grid; gap:10px; }
+    .tip { background:#f2f8fd; padding:14px 16px; border-radius:13px; line-height:1.5; }
+    .forecast { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:10px; }
+    .day { padding:16px 12px; text-align:center; }
+    .day time { display:block; font-weight:700; margin-bottom:12px; }
+    .temps { font-size:1.1rem; font-weight:700; white-space:nowrap; }
+    .temps span { color:var(--muted); font-weight:500; }
+    .rain { color:var(--blue); font-size:.88rem; margin-top:10px; }
+    footer { text-align:center; color:var(--muted); font-size:.85rem; padding:10px 0 28px; }
+    footer a { color:var(--blue); }
+    @media (max-width:760px) { .forecast { grid-template-columns:repeat(2,minmax(0,1fr)); } .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .day:last-child:nth-child(odd) { grid-column:1/-1; } }
+    @media (max-width:420px) { .wrap { width:min(100% - 22px,1050px); } .panel,.current { padding:17px; } .local-time { text-align:left; } .forecast { gap:8px; } }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <div class="eyebrow">TRAVEL WEATHER · 行前準備</div>
+    <h1>出國行前天氣與穿衣助手</h1>
+    <p class="intro">先掌握目的地天氣，再把剛剛好的衣物裝進行李。</p>
+  </header>
+  <main class="wrap">
+    <section class="panel" aria-labelledby="city-title">
+      <h2 id="city-title">選擇旅遊目的地</h2>
+      <nav class="city-buttons" aria-label="熱門旅遊城市">
+        {% for 項目 in 熱門城市 %}
+          <a href="/?city={{ 項目.搜尋名稱|urlencode }}" class="{% if 城市 and 城市.名稱 == 項目.名稱 %}active{% endif %}">{{ 項目.旗幟 }} {{ 項目.名稱 }}</a>
+        {% endfor %}
+      </nav>
+      <form class="search" method="post" action="/">
+        <input name="city" value="{{ 搜尋詞 }}" placeholder="輸入城市，例如 Osaka、Paris、Reykjavik" aria-label="搜尋全球城市" required>
+        <button type="submit">搜尋城市</button>
+      </form>
+      <p class="hint">可輸入中文或英文城市名稱；若有多筆結果，可選擇國家與時區符合行程的一筆。</p>
+      {% if 城市清單|length > 1 %}
+      <form class="results-select" method="post" action="/">
+        <input type="hidden" name="city" value="{{ 搜尋詞 }}">
+        <label for="result">找到多個相近城市，請選擇</label>
+        <select name="result" id="result">
+          {% for 項目 in 城市清單 %}
+          <option value="{{ loop.index0 }}" {% if loop.index0|string == 選擇索引|string %}selected{% endif %}>{{ 項目.名稱 }}{% if 項目.國家 %}，{{ 項目.國家 }}{% endif %}（{{ 項目.時區 }}）</option>
+          {% endfor %}
+        </select>
+        <button type="submit">查看此城市</button>
+      </form>
+      {% endif %}
+    </section>
+
+    {% if 錯誤訊息 %}<div class="error" role="alert">{{ 錯誤訊息 }}</div>{% endif %}
+
+    {% if 城市 and 天氣 %}
+    <div class="section-title"><h2>目的地即時天氣</h2><span>目前天氣與當地時間</span></div>
+    <section class="card current" aria-label="目前天氣資訊">
+      <div class="place-line">
+        <div><h2>{{ 城市.名稱 }}{% if 城市.國家 %}，{{ 城市.國家 }}{% endif %}</h2><p>目的地當地時間</p></div>
+        <div class="local-time"><strong>{{ 天氣.當地時間 }}</strong>{{ 天氣.時區 }}</div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><span>目前氣溫</span><strong>{% if 天氣.目前.temperature_2m is defined %}{{ 天氣.目前.temperature_2m|round|int }}°C{% else %}—{% endif %}</strong></div>
+        <div class="metric"><span>體感溫度</span><strong>{% if 天氣.目前.apparent_temperature is defined %}{{ 天氣.目前.apparent_temperature|round|int }}°C{% else %}—{% endif %}</strong></div>
+        <div class="metric"><span>相對濕度</span><strong>{% if 天氣.目前.relative_humidity_2m is defined %}{{ 天氣.目前.relative_humidity_2m|round|int }}%{% else %}—{% endif %}</strong></div>
+        <div class="metric"><span>風速</span><strong>{% if 天氣.目前.wind_speed_10m is defined %}{{ 天氣.目前.wind_speed_10m|round|int }} km/h{% else %}—{% endif %}</strong></div>
+      </div>
+    </section>
+
+    <div class="section-title"><h2>行前打包提醒</h2><span>依未來 7 日預報整理</span></div>
+    <section class="panel tips" aria-label="穿衣與打包建議">
+      {% for 提醒 in 天氣.建議 %}<div class="tip">🧳 {{ 提醒 }}</div>{% endfor %}
+    </section>
+
+    <div class="section-title"><h2>未來 7 日預報</h2><span>每日低溫、高溫與降雨機率</span></div>
+    <section class="forecast" aria-label="未來七日天氣預報">
+      {% for 日 in 天氣.預報 %}
+      <article class="card day">
+        <time datetime="{{ 日.日期 }}">{{ 日.日期[5:7] }}/{{ 日.日期[8:10] }}</time>
+        <div class="temps">{% if 日.最低 is not none %}{{ 日.最低|round|int }}°{% else %}—{% endif %} <span>～</span> {% if 日.最高 is not none %}{{ 日.最高|round|int }}°C{% else %}—{% endif %}</div>
+        <div class="rain">降雨 {% if 日.降雨 is not none %}{{ 日.降雨 }}%{% else %}—{% endif %}</div>
+      </article>
+      {% endfor %}
+    </section>
+    {% endif %}
+  </main>
+  <footer class="wrap">天氣與預報資料：<a href="https://open-meteo.com/" rel="noopener noreferrer">Weather data by Open-Meteo.com (CC BY 4.0)</a></footer>
+</body>
+</html>
